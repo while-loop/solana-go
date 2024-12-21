@@ -377,3 +377,31 @@ func TestSignatureVerify(t *testing.T) {
 		}
 	}
 }
+
+func TestSignatureImplementsSQLInterfaces(t *testing.T) {
+	signature := MustSignatureFromBase58("gD3jeeaPNiyuJvTKXNEv1gntazWEkvpocofEmrz2rL6Fi4prWSsBH6a9SrwyZEatAozyMsnK2fnk3APXNFxD2Mq")
+
+	t.Run("pointer scan and value", func(t *testing.T) {
+		pk := new(Signature)
+		err := pk.Scan(signature.String())
+		require.NoError(t, err)
+
+		assert.Equal(t, signature.String(), pk.String())
+
+		value, err := pk.Value()
+		require.NoError(t, err)
+		assert.Equal(t, signature.String(), value)
+	})
+
+	t.Run("non-pointer scan and value", func(t *testing.T) {
+		pk := Signature{}
+		err := pk.Scan(signature.String())
+		require.NoError(t, err)
+
+		assert.Equal(t, signature.String(), pk.String())
+
+		value, err := pk.Value()
+		require.NoError(t, err)
+		assert.Equal(t, signature.String(), value)
+	})
+}

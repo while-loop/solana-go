@@ -23,6 +23,7 @@ import (
 	"crypto/ed25519"
 	crypto_rand "crypto/rand"
 	"crypto/sha256"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
@@ -262,6 +263,27 @@ func (p *PublicKey) UnmarshalBSONValue(t bsontype.Type, data []byte) (err error)
 		return fmt.Errorf("invalid public key %q: %w", s, err)
 	}
 	return nil
+}
+
+// Scan implements the sql.Scanner interface to allow a PublicKey to be used as a scan destination.
+func (p *PublicKey) Scan(data any) error {
+	s, ok := data.(string)
+	if !ok {
+		return fmt.Errorf("invalid PublicKey type. expected string, got %T", data)
+	}
+
+	pk, err := PublicKeyFromBase58(s)
+	if err != nil {
+		return err
+	}
+
+	*p = pk
+	return nil
+}
+
+// Value implements the driver.Valuer interface to allow a PublicKey to be used in sql databases.
+func (p PublicKey) Value() (driver.Value, error) {
+	return p.String(), nil
 }
 
 func (p PublicKey) Equals(pb PublicKey) bool {

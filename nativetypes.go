@@ -19,6 +19,7 @@ package solana
 
 import (
 	"crypto/ed25519"
+	"database/sql/driver"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -191,6 +192,27 @@ func (p *Signature) UnmarshalJSON(data []byte) (err error) {
 	copy(target[:], dat)
 	*p = target
 	return
+}
+
+// Scan implements the sql.Scanner interface to allow a Signature to be used as a scan destination.
+func (s *Signature) Scan(data any) error {
+	str, ok := data.(string)
+	if !ok {
+		return fmt.Errorf("invalid Signature type. expected string, got %T", data)
+	}
+
+	sig, err := SignatureFromBase58(str)
+	if err != nil {
+		return err
+	}
+
+	*s = sig
+	return nil
+}
+
+// Value implements the driver.Valuer interface to allow a Signature to be used in sql databases.
+func (s Signature) Value() (driver.Value, error) {
+	return s.String(), nil
 }
 
 // Verify checks that the signature is valid for the given public key and message.

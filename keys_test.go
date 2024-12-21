@@ -630,3 +630,29 @@ func TestFindTokenMetadataAddress(t *testing.T) {
 	assert.Equal(t, metadataPDA, MustPublicKeyFromBase58("GfihrEYCPrvUyrMyMQPdhGEStxa9nKEK2Wfn9iK4AZq2"))
 	assert.Equal(t, bumpSeed, uint8(0xfd))
 }
+
+func TestPublicKeyImplementsSQLInterfaces(t *testing.T) {
+	t.Run("pointer scan and value", func(t *testing.T) {
+		pk := new(PublicKey)
+		err := pk.Scan(TokenProgramID.String())
+		require.NoError(t, err)
+
+		assert.Equal(t, TokenProgramID.String(), pk.String())
+
+		value, err := pk.Value()
+		require.NoError(t, err)
+		assert.Equal(t, TokenProgramID.String(), value)
+	})
+
+	t.Run("non-pointer scan and value", func(t *testing.T) {
+		pk := PublicKey{}
+		err := pk.Scan(TokenProgramID.String())
+		require.NoError(t, err)
+
+		assert.Equal(t, TokenProgramID.String(), pk.String())
+
+		value, err := pk.Value()
+		require.NoError(t, err)
+		assert.Equal(t, TokenProgramID.String(), value)
+	})
+}
